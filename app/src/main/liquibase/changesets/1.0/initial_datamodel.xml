@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd"
+    logicalFilePath="1.0">
+
+	<changeSet id="initial changeset" author="jcox">
+		<comment>Create some tables for a liquibase demo</comment>
+
+		<createTable tableName="student" remarks="A table that contains all students"  >
+			<column name="student_id"    type="NUMBER(12,0)"    remarks="The Primary Key of the student table.">
+				<constraints primaryKey="true" nullable="false" primaryKeyName="pk_student" />
+			</column>
+			<column name="last_name" type="VARCHAR2(128)" remarks="Student Surname">
+				<constraints nullable="false"/>
+			</column>
+			<column name="course_id"  type="NUMBER(12,0)" remarks="The foreign key to the course table."/>
+		</createTable>
+
+		<createTable tableName="course" remarks="A table that contains all courses." >
+			<column name="course_id" type="NUMBER(12,0)" remarks="The primary key of the course table">
+				<constraints primaryKey="true" primaryKeyName="pk_course" nullable="false"/>
+			</column>
+			<column name="course_name" type="VARCHAR2(128)" remarks="Student Surname">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+
+		<addForeignKeyConstraint constraintName="fk_student_course"
+    		baseTableName="student" baseColumnNames="course_id"
+    		referencedTableName="course" referencedColumnNames="course_id" onDelete="RESTRICT"/>
+
+	</changeSet>
+</databaseChangeLog>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet author="jcox (generated)" id="1392578445569-1">
+        <createTable tableName="COURSE">
+            <column name="COURSE_ID" type="DECIMAL(12)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COURSE_NAME" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jcox (generated)" id="1392578445569-2">
+        <createTable tableName="STUDENT">
+            <column name="STUDENT_ID" type="DECIMAL(12)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_NAME" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COURSE_ID" type="DECIMAL(12)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="jcox (generated)" id="1392578445569-3">
+        <addPrimaryKey columnNames="COURSE_ID" constraintName="PK_COURSE" tableName="COURSE"/>
+    </changeSet>
+    <changeSet author="jcox (generated)" id="1392578445569-4">
+        <addPrimaryKey columnNames="STUDENT_ID" constraintName="PK_STUDENT" tableName="STUDENT"/>
+    </changeSet>
+    <changeSet author="jcox (generated)" id="1392578445569-5">
+        <addForeignKeyConstraint baseColumnNames="COURSE_ID" baseTableName="STUDENT" constraintName="FK_STUDENT_COURSE" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="COURSE_ID" referencedTableName="COURSE"/>
+    </changeSet>
+</databaseChangeLog>

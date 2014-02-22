@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd"
+    logicalFilePath="1.0">
+
+	<changeSet id="production course and student data" context="non-testing" author="jcox">
+		<comment>Insert some data for our liquibase demo</comment>
+
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (1 ,'Algebra I')</sql>
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (2 ,'Creative Writing')</sql>
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (3 ,'Computer Science 101')</sql>
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (4 ,'Computer Science 102')</sql>
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (5 ,'Chemistry')</sql>
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (6 ,'19th Century American Literature')</sql>
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (7 ,'French 1')</sql>
+    <sql>INSERT INTO "DEMO"."COURSE" (COURSE_ID,COURSE_NAME) VALUES (8 ,'Basket Weaving')</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (1,'Euclid',1)</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (2,'Twain',2)</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (3,'Gates',3)</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (4,'Knuth',4)</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (5,'Nobel',5)</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (6,'Melville',6)</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (7,'Lafayette',7)</sql>
+    <sql>INSERT INTO "DEMO"."STUDENT" (STUDENT_ID,LAST_NAME,COURSE_ID) VALUES (8,'Leary',8)</sql>
+		
+		
+		<rollback>
+			<delete tableName="student">
+				<where>student_id between 1 and 8 </where>
+			</delete>
+			<delete tableName="course">
+				<where>course_id between 1 and 8 </where>
+			</delete>
+		</rollback>
+	</changeSet>
+</databaseChangeLog>

@@ -1,0 +1,165 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility="1.6"
+targetCompatibility="1.6"
+
+ext.rollbackCount = 1
+
+def liquibaseOutputDir = new File('build/liquibase')
+
+loadConfiguration()
+
+repositories {
+            mavenCentral()
+}
+
+configurations {
+
+	//don't include commons-logging as we are using slf4j.
+	all*.exclude group:  'commons-logging', module: 'commons-logging'
+
+}
+
+dependencies {
+
+	compile 'commons-lang:commons-lang:2.6'
+	compile 'commons-codec:commons-codec:1.8'
+	compile 'org.slf4j:slf4j-api:1.7.5'
+	compile 'org.springframework:spring-core:3.2.5.RELEASE'
+	compile 'org.springframework:spring-context:3.2.5.RELEASE'
+	compile 'org.springframework:spring-orm:3.2.5.RELEASE'
+	//compile 'javax.validation:validation-api:1.0.0.GA'
+        compile 'org.hibernate:hibernate-core:4.1.7.Final'
+            	
+	runtime 'org.slf4j:slf4j-log4j12:1.7.5'	
+	runtime 'org.slf4j:jcl-over-slf4j:1.7.5'
+
+	testCompile 'org.springframework:spring-test:3.2.5.RELEASE'
+	testCompile 'junit:junit:4.11'
+	
+	testRuntime 'org.liquibase:liquibase-core:3.1.1' 
+	testRuntime 'com.h2database:h2:1.3.171'
+	testRuntime 'commons-dbcp:commons-dbcp:1.4'
+	//testRuntime 'javax.transaction:jta:1.1'
+}
+
+sourceSets {
+    test {
+        resources {
+            srcDir 'src/test/resources'
+            srcDir 'src/main/liquibase/changesets'
+        }
+    }
+}
+
+def loadConfiguration() {
+    def environment = hasProperty('env') ? env : 'dev'
+    project.ext.set('environment', environment)
+    println "Environment is set to $environment"
+    
+    def configFile = file('config.groovy')
+    def config = new ConfigSlurper(environment).parse(configFile.toURL())
+        project.ext.set('config', config)
+    }
+
+task resources << {
+    liquibaseOutputDir.mkdirs()
+}
+
+//test {
+//	//The in memory dbs were being re-used across test classes.
+//	forkEvery = 1
+//	maxParallelForks=3
+//}
+
+task "create-dirs" << {
+   sourceSets*.java.srcDirs*.each { it.mkdirs() }
+   sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+}
+
+task(liquibaseStatus, type: JavaExec) {
+    description = 'Outputs list of unrun change sets'
+    main = 'liquibase.integration.commandline.Main'
+    classpath = configurations.testRuntime 
+    args "--changeLogFile=src/main/liquibase/changesets/dbchangelog.xml", 
+	"--username=$config.database.username", 
+	"--password=$config.database.password",
+	"--url=$config.database.url",
+	"--driver=$config.database.driver",
+	"--defaultSchemaName=$config.database.schema",
+	'status',
+	'--verbose'
+    systemProperty "database.schema", "$config.database.schema"
+}
+
+task(liquibaseUpdate, type: JavaExec) {
+    description = 'Apply the liquibase changesets to env'
+    main = 'liquibase.integration.commandline.Main'
+    classpath = configurations.testRuntime
+    args "--changeLogFile=src/main/liquibase/changesets/dbchangelog.xml", 
+	"--username=$config.database.username", 
+	"--password=$config.database.password",
+	"--url=$config.database.url",
+	"--driver=$config.database.driver",
+	"--defaultSchemaName=$config.database.schema",
+        "--contexts=non-testing",
+	'update'
+    systemProperty "database.schema", "$config.database.schema"
+}
+
+task(liquibaseRollbackCount, type: JavaExec) {
+    main = 'liquibase.integration.commandline.Main'
+    classpath = configurations.testRuntime
+    args "--changeLogFile=src/main/liquibase/changesets/dbchangelog.xml", 
+	"--username=$config.database.username", 
+	"--password=$config.database.password",
+	"--url=$config.database.url",
+	"--driver=$config.database.driver",
+	"--defaultSchemaName=$config.database.schema",
+	'rollbackCount',
+	rollbackCount
+    systemProperty "database.schema", "$config.database.schema"
+}
+
+task liquibaseCreateBaseline(dependsOn: ['liquibaseCreateBaselineChangeLog', 'liquibaseTempDB', 'liquibaseCreateAllChangeLogs'] ) << {
+
+	println 'Output changelog sync script to build/liquibase/changelogsync.xml'
+	println 'Output baseline changelog script to build/liquibase/baseline.xml'
+
+}
+
+task liquibaseTempDB {
+
+	ext.url = 'jdbc:h2:'+  file('build/liquibase').getAbsolutePath() + '/tmpDB';
+}
+
+task(liquibaseCreateBaselineChangeLog, dependsOn: 'resources',  type: JavaExec) {
+    main = 'liquibase.integration.commandline.Main'
+    classpath = configurations.testRuntime
+    args "--changeLogFile=build/liquibase/baseline.xml",
+	"--username=$config.database.username", 
+	"--password=$config.database.password",
+	"--url=$config.database.url",
+	"--driver=$config.database.driver",
+	"--defaultSchemaName=$config.database.schema",
+	'generateChangeLog'
+    systemProperty "database.schema", "$config.database.schema"
+}
+
+task(liquibaseCreateAllChangeLogs, dependsOn: 'resources', type: JavaExec) {
+    main = 'liquibase.integration.commandline.Main'
+    classpath = configurations.testRuntime
+    args "--changeLogFile=src/main/liquibase/changesets/dbchangelog.xml", 
+	"--username=sa", 
+	"--password=",
+	"--url=$liquibaseTempDB.url",
+	"--driver=org.h2.Driver",
+	"--defaultSchemaName=$config.database.schema",
+	'changelogSyncSQL'
+    systemProperty "database.schema", "$config.database.schema"
+    
+    doFirst {
+       standardOutput new FileOutputStream('build/liquibase/changelogSync.sql')	
+    }
+}

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+	<changeSet id="refactor changeset" author="jcox">
+		<comment>add student_course table, convert data, drop student fk to course, remove course_id from student table</comment>
+
+		<createTable tableName="student_course" remarks="A table that contains the many to many relationship between students and courses"  >
+			<column name="student_id"    type="NUMBER(12,0)"    remarks="The foreign Key to the student table.">
+				<constraints nullable="false" />
+			</column>
+			<column name="course_id"  type="NUMBER(12,0)" remarks="The foreign key to the course table.">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint constraintName="fk_student_course_student"
+    			baseTableName="student_course" baseColumnNames="student_id"
+    			referencedTableName="student" referencedColumnNames="student_id" onDelete="RESTRICT"/>
+
+		<addForeignKeyConstraint constraintName="fk_student_course_course"
+    			baseTableName="student_course" baseColumnNames="course_id"
+    			referencedTableName="course" referencedColumnNames="course_id" onDelete="RESTRICT"/>
+
+		<addPrimaryKey tableName="student_course"
+    			columnNames="student_id,course_id"
+    			constraintName="pk_student_course"/>
+
+		<sql>
+			INSERT INTO DEMO.student_course(student_id, course_id) SELECT student_id, course_id from DEMO.student
+		</sql>
+
+		<dropForeignKeyConstraint
+    			constraintName="fk_student_course"
+    			baseTableName="student"/>		
+		
+		<dropColumn tableName="student" columnName="course_id"/>
+
+		<rollback>
+			<addColumn tableName="student">
+				<column name="course_id"  type="NUMBER(12,0)" remarks="The foreign key to the course table."/>	 
+			</addColumn>
+			
+			<addForeignKeyConstraint constraintName="fk_student_course"
+    					baseTableName="student" baseColumnNames="course_id"
+    					referencedTableName="course" referencedColumnNames="course_id" onDelete="RESTRICT"/>
+			
+			<sql>
+				UPDATE DEMO.student s set course_id = (SELECT MIN(course_id) from DEMO.student_course sc where sc.student_id = s.student_id)
+			</sql>
+
+
+		<dropForeignKeyConstraint constraintName="fk_student_course_student"
+    			baseTableName="student_course" />
+
+		<dropForeignKeyConstraint constraintName="fk_student_course_course"
+    			baseTableName="student_course" />
+			
+		<dropTable tableName="student_course"/>
+		
+	</rollback>
+	
+	</changeSet>
+</databaseChangeLog>
